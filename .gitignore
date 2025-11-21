@@ -1,0 +1,29 @@
+# Build artifacts
+**/build/
+**/target/
+**/*.jar
+**/*.war
+
+# Gradle
+**/.gradle/
+
+# IDE
+**/.idea/
+**/.vscode/
+**/*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment
+.env
+*.env
+
+# Docker volumes
+postgres_data/
+prometheus_data/
+grafana_data/

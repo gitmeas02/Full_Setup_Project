@@ -1,0 +1,109 @@
+---
+- name: Deploy Email Service Application
+  hosts: app_servers
+  become: yes
+  vars:
+    app_name: email-service
+    app_path: "{{ playbook_dir }}/../email"
+    docker_image: "{{ docker_registry }}/{{ app_name }}"
+    docker_tag: "{{ docker_tag | default('latest') }}"
+    app_port: 8080
+    container_name: "{{ app_name }}"
+    
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+
+    - name: Install required packages
+      package:
+        name:
+          - docker.io
+          - docker-compose
+          - python3-pip
+        state: present
+
+    - name: Install Docker SDK for Python
+      pip:
+        name: docker
+        state: present
+
+    - name: Ensure Docker service is running
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Log in to Docker registry
+      docker_login:
+        registry_url: "{{ docker_registry }}"
+        username: "{{ docker_username }}"
+        password: "{{ docker_password }}"
+      when: docker_username is defined
+
+    - name: Pull Docker image
+      docker_image:
+        name: "{{ docker_image }}"
+        tag: "{{ docker_tag }}"
+        source: pull
+        force_source: yes
+
+    - name: Stop and remove existing container
+      docker_container:
+        name: "{{ container_name }}"
+        state: absent
+      ignore_errors: yes
+
+    - name: Create application directory
+      file:
+        path: /opt/{{ app_name }}
+        state: directory
+        mode: '0755'
+
+    - name: Copy environment file
+      template:
+        src: templates/app.env.j2
+        dest: /opt/{{ app_name }}/.env
+        mode: '0600'
+
+    - name: Run application container
+      docker_container:
+        name: "{{ container_name }}"
+        image: "{{ docker_image }}:{{ docker_tag }}"
+        state: started
+        restart_policy: unless-stopped
+        published_ports:
+          - "{{ app_port }}:8080"
+        env_file: /opt/{{ app_name }}/.env
+        networks:
+          - name: app-network
+        healthcheck:
+          test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+          interval: 30s
+          timeout: 10s
+          retries: 3
+          start_period: 40s
+
+    - name: Wait for application to be healthy
+      uri:
+        url: "http://localhost:{{ app_port }}/actuator/health"
+        status_code: 200
+      register: result
+      until: result.status == 200
+      retries: 30
+      delay: 10
+
+    - name: Clean up old Docker images
+      docker_prune:
+        images: yes
+        images_filters:
+          dangling: true
+
+  handlers:
+    - name: restart application
+      docker_container:
+        name: "{{ container_name }}"
+        state: started
+        restart: yes
