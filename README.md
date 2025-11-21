@@ -2,6 +2,35 @@
 
 Complete CI/CD automation with **Jenkins**, **Ansible**, and **Docker** for Spring Boot microservices.
 
+## 🚀 Getting Started
+
+### First Time Setup
+1. **Verify your setup** - Run setup checker:
+   ```cmd
+   check-setup.bat          # Windows
+   ./check-setup.sh         # Linux/Mac
+   ```
+
+2. **Quick Start** - See [QUICKSTART.md](QUICKSTART.md) for rapid deployment
+
+3. **Full Guide** - See [DEPLOYMENT.md](DEPLOYMENT.md) for all deployment options
+
+### Fast Track (2 Commands)
+```bash
+# 1. Check everything is ready
+check-setup.bat  # or ./check-setup.sh
+
+# 2. Start local development (App only)
+docker-compose up -d
+
+# OR: Start full stack with Jenkins + SonarQube
+docker-compose -f docker-compose.full.yml up -d
+```
+
+**Test:** http://localhost:8080/actuator/health should return `{"status":"UP"}`
+
+---
+
 ## 📁 Project Structure
 
 ```

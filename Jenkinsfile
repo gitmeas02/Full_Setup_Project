@@ -7,7 +7,7 @@ pipeline {
         DOCKER_TAG = "${BUILD_NUMBER}"
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
         SONARQUBE_ENV = 'SonarQube'
-        GIT_REPO = 'https://github.com/yourusername/email-service.git'
+        GIT_REPO = 'https://github.com/gitmeas02/Full_Setup_Project.git'
         APP_DIR = 'email'
     }
     
